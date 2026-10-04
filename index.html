@@ -82,7 +82,23 @@
     }
     .stat-sub { font-size: 0.7rem; color: var(--text-muted); margin-top: 2px; }
 
-    .picks-list { display: flex; flex-direction: column; gap: 16px; }
+    .insights-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background-color: var(--card-bg);
+      border: 1px solid var(--border-color);
+      padding: 10px 14px;
+      border-radius: 8px;
+      margin-top: 12px;
+      font-size: 0.82rem;
+    }
+
+    .insight-item { display: flex; align-items: center; gap: 6px; }
+    .insight-label { color: var(--text-muted); font-weight: 600; text-transform: uppercase; font-size: 0.72rem; }
+    .insight-value { font-weight: 700; color: var(--text-main); }
+
+    .picks-list { display: flex; flex-direction: column; gap: 16px; margin-top: 16px; }
 
     .pick-card {
       background-color: var(--card-bg);
@@ -239,18 +255,29 @@
       <div class="stats-grid">
         <div class="stat-card">
           <div class="stat-val" id="stat-record">0 - 0 - 0</div>
-          <div class="stat-lbl">Our Record</div>
-          <div class="stat-sub" id="stat-record-sub">0 Pending</div>
+          <div class="stat-lbl">Weekly Record</div>
+          <div class="stat-sub" id="stat-record-sub">0 Live | 0 Pending</div>
         </div>
         <div class="stat-card">
-          <div class="stat-val" id="stat-locked" style="color: var(--accent-green);">0 / 55</div>
-          <div class="stat-lbl">Locked Points</div>
-          <div class="stat-sub" id="stat-win-pct">0.0% Win Rate</div>
+          <div class="stat-val" id="stat-projected" style="color: var(--accent-blue);">0.0 / 55</div>
+          <div class="stat-lbl">Projected Points</div>
+          <div class="stat-sub" id="stat-projected-sub">0 Locked Pts</div>
         </div>
         <div class="stat-card">
-          <div class="stat-val" id="stat-live" style="color: var(--accent-yellow);">0 / 55</div>
-          <div class="stat-lbl">In Play / Max</div>
-          <div class="stat-sub" id="stat-max-sub">Max Possible</div>
+          <div class="stat-val" id="stat-max" style="color: var(--accent-yellow);">55 / 55</div>
+          <div class="stat-lbl">Max Points</div>
+          <div class="stat-sub" id="stat-max-sub">Ceiling</div>
+        </div>
+      </div>
+
+      <div class="insights-bar">
+        <div class="insight-item">
+          <span class="insight-label">Points in Play:</span>
+          <span class="insight-value" id="stat-live-pts">0 Pts Active</span>
+        </div>
+        <div class="insight-item">
+          <span class="insight-label">Top Pick (10 PT):</span>
+          <span class="insight-value" id="stat-top-pick">--</span>
         </div>
       </div>
     </header>
@@ -274,7 +301,6 @@
       return a === b || a.includes(b) || b.includes(a);
     }
 
-    // Normal Cumulative Distribution Function for Cover Probability
     function normCDF(x) {
       const t = 1 / (1 + 0.2316419 * Math.abs(x));
       const d = 0.3989423 * Math.exp(-x * x / 2);
@@ -285,7 +311,7 @@
 
     function calculateCoverProb(margin, period, clockSec) {
       if (period >= 4 && clockSec === 0) return margin > 0 ? 100 : 0;
-      const totalSec = 3600; // 60 mins
+      const totalSec = 3600;
       const elapsedSec = Math.min(totalSec, Math.max(0, ((period - 1) * 900) + (900 - clockSec)));
       const remainingSec = Math.max(1, totalSec - elapsedSec);
       
@@ -297,7 +323,8 @@
     async function loadDashboard() {
       try {
         const picksRes = await fetch('picks.json');
-        const picks = await picksRes.json();
+        const picksData = await picksRes.json();
+        const picks = Array.isArray(picksData) ? picksData : (picksData.picks || []);
 
         const [cfbRes, nflRes] = await Promise.all([
           fetch('https://site.api.espn.com/apis/site/v2/sports/football/college-football/scoreboard').catch(() => null),
@@ -308,10 +335,10 @@
         const nflData = nflRes ? await nflRes.json() : {};
         const events = [...(cfbData.events || []), ...(nflData.events || [])];
 
-        let wins = 0, losses = 0, ties = 0, inProgressCount = 0;
-        let lockedPts = 0, livePts = 0, maxPts = 55;
+        let wins = 0, losses = 0, ties = 0, liveCount = 0, upcomingCount = 0;
+        let lockedPts = 0, maxPts = 55, totalProjectedPts = 0, activeLivePts = 0;
+        let topPickSummary = "--";
 
-        // Process pick cards
         const processedPicks = picks.map(p => {
           const game = events.find(e => {
             const comp = e.competitions[0];
@@ -335,9 +362,8 @@
           let headerText = "SCHEDULED";
           let scoreLineHtml = `<div>Game Clock</div><div>Scheduled</div>`;
           let positionLineHtml = `<div class="pos-neutral">Need ${p.pick} ${p.spread > 0 ? '+' : ''}${p.spread}</div><div>Prob: 50.0%</div>`;
-          
-          // Sort Priority: 1 = LIVE, 2 = UPCOMING, 3 = FINAL
           let sortPriority = 2;
+          let pickStatusShort = "Scheduled";
 
           if (game) {
             const comp = game.competitions[0];
@@ -368,6 +394,8 @@
                   cardBorderClass = "card-win";
                   wins++;
                   lockedPts += p.confidence;
+                  totalProjectedPts += p.confidence;
+                  pickStatusShort = `<span style="color:var(--accent-green)">Covered ✓</span>`;
                   positionLineHtml = `<div class="pos-good">✓ Covered (+${currentMargin.toFixed(1)} pts)</div><div>Prob: 100%</div>`;
                 } else if (currentMargin < 0) {
                   statusText = "LOSS";
@@ -375,17 +403,20 @@
                   cardBorderClass = "card-loss";
                   losses++;
                   maxPts -= p.confidence;
+                  pickStatusShort = `<span style="color:var(--accent-red)">Missed ✗</span>`;
                   positionLineHtml = `<div class="pos-bad">✗ Missed (-${Math.abs(currentMargin).toFixed(1)} pts)</div><div>Prob: 0%</div>`;
                 } else {
                   statusText = "PUSH";
                   statusBg = "bg-upcoming";
                   cardBorderClass = "card-upcoming";
                   ties++;
+                  pickStatusShort = `Pushed`;
                   positionLineHtml = `<div class="pos-neutral">Pushed</div><div>Prob: 0%</div>`;
                 }
               } else {
                 sortPriority = 1;
-                inProgressCount++;
+                liveCount++;
+                activeLivePts += p.confidence;
                 headerText = `🟢 LIVE — ${clockText}`;
                 
                 const period = comp.status.period || 1;
@@ -394,13 +425,14 @@
                 const clockSec = parts.length === 2 ? (parseInt(parts[0]) * 60 + parseInt(parts[1])) : 0;
                 
                 const coverProb = calculateCoverProb(currentMargin, period, clockSec);
+                totalProjectedPts += p.confidence * (coverProb / 100);
 
                 if (currentMargin > 0) {
                   statusText = `<span class="live-dot"></span> COVERING`;
                   statusBg = "bg-covering";
                   cardBorderClass = "card-covering";
                   headerBarClass = "live-covering";
-                  livePts += p.confidence;
+                  pickStatusShort = `<span style="color:var(--accent-green)">🟢 Live (+${currentMargin.toFixed(1)})</span>`;
                   positionLineHtml = `<div class="pos-good">Covering by +${currentMargin.toFixed(1)} pts</div><div>Prob: ${coverProb}%</div>`;
                 } else if (currentMargin < 0) {
                   statusText = `<span class="live-dot-red"></span> TRAILING`;
@@ -408,22 +440,34 @@
                   cardBorderClass = "card-trailing";
                   headerBarClass = "live-trailing";
                   headerText = `🔴 LIVE — ${clockText}`;
+                  pickStatusShort = `<span style="color:var(--accent-red)">🔴 Live (-${Math.abs(currentMargin).toFixed(1)})</span>`;
                   positionLineHtml = `<div class="pos-bad">Trailing by ${Math.abs(currentMargin).toFixed(1)} pts</div><div>Prob: ${coverProb}%</div>`;
                 } else {
                   statusText = `<span class="live-dot"></span> TIED SPREAD`;
                   statusBg = "bg-upcoming";
                   cardBorderClass = "card-upcoming";
+                  pickStatusShort = `🟢 Live (Tied)`;
                   positionLineHtml = `<div class="pos-neutral">Even on spread</div><div>Prob: 50.0%</div>`;
                 }
               }
             } else {
               sortPriority = 2;
+              upcomingCount++;
+              totalProjectedPts += p.confidence * 0.50;
               const dateObj = new Date(game.date);
               const timeStr = dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
               const dayStr = dateObj.toLocaleDateString([], { weekday: 'short' });
               headerText = `UPCOMING — ${dayStr} ${timeStr}`;
+              pickStatusShort = `Scheduled (${dayStr})`;
               scoreLineHtml = `<div>Kickoff: ${dayStr} ${timeStr}</div><div>Scheduled</div>`;
             }
+          } else {
+            upcomingCount++;
+            totalProjectedPts += p.confidence * 0.50;
+          }
+
+          if (p.confidence === 10) {
+            topPickSummary = `${p.pick} (${p.spread > 0 ? '+' : ''}${p.spread}) — ${pickStatusShort}`;
           }
 
           const spreadFormatted = p.spread > 0 ? `+${p.spread}` : `${p.spread}`;
@@ -457,21 +501,19 @@
           };
         });
 
-        // Sort: LIVE first (1), UPCOMING second (2), FINAL third (3); then by confidence points high to low
         processedPicks.sort((a, b) => a.sortPriority - b.sortPriority || b.confidence - a.confidence);
 
         const container = document.getElementById('picks-container');
         container.innerHTML = processedPicks.map(p => p.html).join('');
 
-        const totalDecided = wins + losses + ties;
-        const winRate = totalDecided > 0 ? ((wins / totalDecided) * 100).toFixed(1) : "0.0";
-
         document.getElementById('stat-record').innerText = `${wins} - ${losses} - ${ties}`;
-        document.getElementById('stat-record-sub').innerText = `${inProgressCount} In Progress`;
-        document.getElementById('stat-locked').innerText = `${lockedPts} / 55`;
-        document.getElementById('stat-win-pct').innerText = `${winRate}% Win Rate`;
-        document.getElementById('stat-live').innerText = `${livePts} / ${maxPts}`;
-        document.getElementById('stat-max-sub').innerText = `Max Possible: ${maxPts} Pts`;
+        document.getElementById('stat-record-sub').innerText = `${liveCount} Live | ${upcomingCount} Pending`;
+        document.getElementById('stat-projected').innerText = `${totalProjectedPts.toFixed(1)} / 55`;
+        document.getElementById('stat-projected-sub').innerText = `${lockedPts} Locked Pts`;
+        document.getElementById('stat-max').innerText = `${maxPts} / 55`;
+
+        document.getElementById('stat-live-pts').innerText = `${activeLivePts} Pts Active`;
+        document.getElementById('stat-top-pick').innerHTML = topPickSummary;
 
       } catch (err) {
         console.error("Dashboard error:", err);
