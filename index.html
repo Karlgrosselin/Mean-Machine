@@ -13,7 +13,12 @@
       --accent-green: #22c55e;
       --accent-red: #ef4444;
       --accent-yellow: #eab308;
+      --accent-blue: #38bdf8;
       --border-color: #334155;
+    }
+
+    * {
+      box-sizing: border-box;
     }
 
     body {
@@ -39,16 +44,24 @@
     }
 
     .league-title {
-      font-size: 0.9rem;
+      font-size: 0.85rem;
       text-transform: uppercase;
-      letter-spacing: 0.1em;
+      letter-spacing: 0.12em;
       color: var(--accent-yellow);
       margin-bottom: 4px;
+      font-weight: 700;
     }
 
     h1 {
-      margin: 0 0 12px 0;
+      margin: 0 0 4px 0;
       font-size: 1.8rem;
+    }
+
+    .tagline {
+      font-style: italic;
+      color: var(--text-muted);
+      font-size: 0.85rem;
+      margin-bottom: 16px;
     }
 
     .stats-grid {
@@ -60,19 +73,27 @@
 
     .stat-card {
       background-color: var(--card-bg);
-      padding: 12px;
+      padding: 12px 8px;
       border-radius: 8px;
       border: 1px solid var(--border-color);
       text-align: center;
     }
 
     .stat-val {
-      font-size: 1.4rem;
-      font-weight: bold;
+      font-size: 1.3rem;
+      font-weight: 800;
     }
 
     .stat-lbl {
-      font-size: 0.75rem;
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+
+    .stat-sub {
+      font-size: 0.7rem;
       color: var(--text-muted);
       margin-top: 2px;
     }
@@ -80,7 +101,7 @@
     .picks-list {
       display: flex;
       flex-direction: column;
-      gap: 12px;
+      gap: 14px;
     }
 
     .pick-card {
@@ -90,7 +111,7 @@
       padding: 14px;
       display: flex;
       flex-direction: column;
-      gap: 8px;
+      gap: 10px;
     }
 
     .card-top {
@@ -100,59 +121,76 @@
     }
 
     .matchup {
-      font-weight: 600;
-      font-size: 1rem;
+      font-weight: 700;
+      font-size: 0.95rem;
+      color: var(--text-main);
     }
 
     .conf-tag {
       background-color: #334155;
-      padding: 4px 8px;
+      color: var(--accent-yellow);
+      padding: 4px 10px;
       border-radius: 6px;
-      font-size: 0.85rem;
-      font-weight: bold;
+      font-size: 0.8rem;
+      font-weight: 800;
     }
 
     .card-mid {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      background: #0f172a66;
-      padding: 8px 12px;
+      background: rgba(15, 23, 42, 0.6);
+      padding: 10px 12px;
       border-radius: 6px;
+      border: 1px solid rgba(255, 255, 255, 0.05);
     }
 
     .pick-details {
-      font-size: 0.95rem;
+      font-size: 0.9rem;
     }
 
     .highlight-pick {
-      color: #38bdf8;
-      font-weight: bold;
+      color: var(--accent-blue);
+      font-weight: 700;
     }
 
     .status-badge {
-      padding: 4px 8px;
-      border-radius: 4px;
+      padding: 4px 10px;
+      border-radius: 6px;
       font-size: 0.75rem;
-      font-weight: bold;
+      font-weight: 800;
       text-transform: uppercase;
+      letter-spacing: 0.05em;
     }
 
-    .bg-win { background-color: rgba(34, 197, 94, 0.2); color: var(--accent-green); }
-    .bg-loss { background-color: rgba(239, 68, 68, 0.2); color: var(--accent-red); }
-    .bg-pending { background-color: rgba(234, 179, 8, 0.2); color: var(--accent-yellow); }
+    .bg-win { background-color: rgba(34, 197, 94, 0.2); color: var(--accent-green); border: 1px solid rgba(34, 197, 94, 0.4); }
+    .bg-loss { background-color: rgba(239, 68, 68, 0.2); color: var(--accent-red); border: 1px solid rgba(239, 68, 68, 0.4); }
+    .bg-covering { background-color: rgba(34, 197, 94, 0.15); color: var(--accent-green); border: 1px solid rgba(34, 197, 94, 0.3); }
+    .bg-trailing { background-color: rgba(239, 68, 68, 0.15); color: var(--accent-red); border: 1px solid rgba(239, 68, 68, 0.3); }
+    .bg-upcoming { background-color: rgba(148, 163, 184, 0.15); color: var(--text-muted); border: 1px solid rgba(148, 163, 184, 0.3); }
 
     .card-bot {
       display: flex;
-      justify-content: space-between;
-      font-size: 0.8rem;
+      flex-direction: column;
+      gap: 4px;
+      font-size: 0.82rem;
       color: var(--text-muted);
     }
 
-    .win-prob {
-      font-weight: bold;
+    .score-line {
+      display: flex;
+      justify-content: space-between;
       color: var(--text-main);
+      font-weight: 600;
     }
+
+    .position-line {
+      font-size: 0.8rem;
+    }
+
+    .pos-good { color: var(--accent-green); }
+    .pos-bad { color: var(--accent-red); }
+    .pos-neutral { color: var(--text-muted); }
   </style>
 </head>
 <body>
@@ -161,25 +199,31 @@
     <header>
       <div class="league-title">Meat Sheet League</div>
       <h1>Team: Mean Machine</h1>
+      <div class="tagline">"Run your guts out, and you’ll have something in here."</div>
       
       <div class="stats-grid">
         <div class="stat-card">
-          <div class="stat-val" id="stat-locked" style="color: var(--accent-green);">0</div>
-          <div class="stat-lbl">Points Locked</div>
+          <div class="stat-val" id="stat-record">0 - 0 - 0</div>
+          <div class="stat-lbl">Our Record</div>
+          <div class="stat-sub" id="stat-record-sub">0 Pending</div>
         </div>
         <div class="stat-card">
-          <div class="stat-val" id="stat-live" style="color: var(--accent-yellow);">0</div>
-          <div class="stat-lbl">Points In Play</div>
+          <div class="stat-val" id="stat-locked" style="color: var(--accent-green);">0 / 55</div>
+          <div class="stat-lbl">Locked Points</div>
+          <div class="stat-sub" id="stat-win-pct">0.0% Win Rate</div>
         </div>
         <div class="stat-card">
-          <div class="stat-val" id="stat-max">55</div>
-          <div class="stat-lbl">Max Possible</div>
+          <div class="stat-val" id="stat-live" style="color: var(--accent-yellow);">0 / 55</div>
+          <div class="stat-lbl">In Play / Max</div>
+          <div class="stat-sub" id="stat-max-sub">Max Possible</div>
         </div>
       </div>
     </header>
 
     <div class="picks-list" id="picks-container">
-      <div style="text-align: center; color: var(--text-muted); padding: 20px;">Loading picks and live scores...</div>
+      <div style="text-align: center; color: var(--text-muted); padding: 30px;">
+        Fetching live scores and updating dashboard...
+      </div>
     </div>
   </div>
 
@@ -198,6 +242,11 @@
         const nflData = nflRes ? await nflRes.json() : {};
         const events = [...(cfbData.events || []), ...(nflData.events || [])];
 
+        let wins = 0;
+        let losses = 0;
+        let ties = 0;
+        let inProgressCount = 0;
+
         let lockedPts = 0;
         let livePts = 0;
         let maxPts = 55;
@@ -211,10 +260,10 @@
             return name.includes(p.homeTeam.toLowerCase()) || name.includes(p.awayTeam.toLowerCase());
           });
 
-          let statusText = "Upcoming";
-          let statusBg = "bg-pending";
-          let liveScoreStr = "Game Scheduled";
-          let winProbStr = "~50%";
+          let statusText = "UPCOMING";
+          let statusBg = "bg-upcoming";
+          let scoreLineHtml = `<div>Status: Scheduled</div><div>--</div>`;
+          let positionLineHtml = `<div class="pos-neutral">Need ${p.pick} ${p.spread > 0 ? '+' : ''}${p.spread}</div>`;
 
           if (game) {
             const comp = game.competitions[0];
@@ -226,40 +275,63 @@
             const state = comp.status.type.state;
             const isFinished = comp.status.type.completed;
 
-            liveScoreStr = `${away.team.abbreviation || p.awayTeam} ${aScore} - ${home.team.abbreviation || p.homeTeam} ${hScore} (${comp.status.type.shortDetail})`;
-
             const isPickedHome = p.pick.toLowerCase() === p.homeTeam.toLowerCase();
             const pickedScore = isPickedHome ? hScore : aScore;
             const oppScore = isPickedHome ? aScore : hScore;
-            const margin = (pickedScore - oppScore) + p.spread;
+            const currentMargin = (pickedScore - oppScore) + p.spread;
 
             if (state === 'in' || isFinished) {
-              if (margin > 0) {
-                if (isFinished) {
+              const clockText = comp.status.type.shortDetail || (isFinished ? "FINAL" : "LIVE");
+              scoreLineHtml = `
+                <div>${away.team.abbreviation || p.awayTeam} ${aScore} - ${home.team.abbreviation || p.homeTeam} ${hScore}</div>
+                <div>${clockText}</div>
+              `;
+
+              if (isFinished) {
+                if (currentMargin > 0) {
                   statusText = "WIN";
                   statusBg = "bg-win";
+                  wins++;
                   lockedPts += p.confidence;
-                  winProbStr = "100%";
-                } else {
-                  statusText = "COVERING";
-                  statusBg = "bg-pending";
-                  livePts += p.confidence;
-                  winProbStr = "~75%";
-                }
-              } else {
-                if (isFinished) {
+                  positionLineHtml = `<div class="pos-good">Covered by +${currentMargin.toFixed(1)} pts</div>`;
+                } else if (currentMargin < 0) {
                   statusText = "LOSS";
                   statusBg = "bg-loss";
+                  losses++;
                   maxPts -= p.confidence;
-                  winProbStr = "0%";
+                  positionLineHtml = `<div class="pos-bad">Missed cover by ${Math.abs(currentMargin).toFixed(1)} pts</div>`;
                 } else {
+                  statusText = "PUSH";
+                  statusBg = "bg-upcoming";
+                  ties++;
+                  positionLineHtml = `<div class="pos-neutral">Pushed (Exact Spread)</div>`;
+                }
+              } else {
+                inProgressCount++;
+                if (currentMargin > 0) {
+                  statusText = "COVERING";
+                  statusBg = "bg-covering";
+                  livePts += p.confidence;
+                  positionLineHtml = `<div class="pos-good">Currently covering by +${currentMargin.toFixed(1)} pts</div>`;
+                } else if (currentMargin < 0) {
                   statusText = "TRAILING";
-                  statusBg = "bg-loss";
-                  winProbStr = "~25%";
+                  statusBg = "bg-trailing";
+                  positionLineHtml = `<div class="pos-bad">Currently trailing by ${Math.abs(currentMargin).toFixed(1)} pts</div>`;
+                } else {
+                  statusText = "TIED SPREAD";
+                  statusBg = "bg-upcoming";
+                  positionLineHtml = `<div class="pos-neutral">Currently right on spread (Push)</div>`;
                 }
               }
+            } else {
+              const dateObj = new Date(game.date);
+              const timeStr = dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+              const dayStr = dateObj.toLocaleDateString([], { weekday: 'short' });
+              scoreLineHtml = `<div>Kickoff: ${dayStr} ${timeStr}</div><div>Scheduled</div>`;
             }
           }
+
+          const spreadFormatted = p.spread > 0 ? `+${p.spread}` : `${p.spread}`;
 
           container.innerHTML += `
             <div class="pick-card">
@@ -269,24 +341,32 @@
               </div>
               <div class="card-mid">
                 <div class="pick-details">
-                  Pick: <span class="highlight-pick">${p.pick}</span> (${p.spread > 0 ? '+' : ''}${p.spread})
+                  Our Pick: <span class="highlight-pick">${p.pick}</span> (${spreadFormatted})
                 </div>
                 <div class="status-badge ${statusBg}">${statusText}</div>
               </div>
               <div class="card-bot">
-                <div>${liveScoreStr}</div>
-                <div class="win-prob">Win Prob: ${winProbStr}</div>
+                <div class="score-line">${scoreLineHtml}</div>
+                <div class="position-line">${positionLineHtml}</div>
               </div>
             </div>
           `;
         });
 
-        document.getElementById('stat-locked').innerText = lockedPts;
-        document.getElementById('stat-live').innerText = livePts;
-        document.getElementById('stat-max').innerText = maxPts;
+        const totalDecided = wins + losses + ties;
+        const winRate = totalDecided > 0 ? ((wins / totalDecided) * 100).toFixed(1) : "0.0";
+
+        document.getElementById('stat-record').innerText = `${wins} - ${losses} - ${ties}`;
+        document.getElementById('stat-record-sub').innerText = `${inProgressCount} In Progress`;
+        
+        document.getElementById('stat-locked').innerText = `${lockedPts} / 55`;
+        document.getElementById('stat-win-pct').innerText = `${winRate}% Win Rate`;
+
+        document.getElementById('stat-live').innerText = `${livePts} / ${maxPts}`;
+        document.getElementById('stat-max-sub').innerText = `Max Possible: ${maxPts} Pts`;
 
       } catch (err) {
-        console.error(err);
+        console.error("Dashboard error:", err);
       }
     }
 
