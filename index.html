@@ -276,8 +276,8 @@
           <span class="insight-value" id="stat-live-pts">0 Pts Active</span>
         </div>
         <div class="insight-item">
-          <span class="insight-label">Top Pick (10 PT):</span>
-          <span class="insight-value" id="stat-top-pick">--</span>
+          <span class="insight-label">Live Status:</span>
+          <span class="insight-value" id="stat-covering-pts">0 Pts Covering</span>
         </div>
       </div>
     </header>
@@ -336,8 +336,7 @@
         const events = [...(cfbData.events || []), ...(nflData.events || [])];
 
         let wins = 0, losses = 0, ties = 0, liveCount = 0, upcomingCount = 0;
-        let lockedPts = 0, maxPts = 55, totalProjectedPts = 0, activeLivePts = 0;
-        let topPickSummary = "--";
+        let lockedPts = 0, maxPts = 55, totalProjectedPts = 0, activeLivePts = 0, activeCoveringPts = 0;
 
         const processedPicks = picks.map(p => {
           const game = events.find(e => {
@@ -363,7 +362,6 @@
           let scoreLineHtml = `<div>Game Clock</div><div>Scheduled</div>`;
           let positionLineHtml = `<div class="pos-neutral">Need ${p.pick} ${p.spread > 0 ? '+' : ''}${p.spread}</div><div>Prob: 50.0%</div>`;
           let sortPriority = 2;
-          let pickStatusShort = "Scheduled";
 
           if (game) {
             const comp = game.competitions[0];
@@ -395,7 +393,6 @@
                   wins++;
                   lockedPts += p.confidence;
                   totalProjectedPts += p.confidence;
-                  pickStatusShort = `<span style="color:var(--accent-green)">Covered ✓</span>`;
                   positionLineHtml = `<div class="pos-good">✓ Covered (+${currentMargin.toFixed(1)} pts)</div><div>Prob: 100%</div>`;
                 } else if (currentMargin < 0) {
                   statusText = "LOSS";
@@ -403,14 +400,12 @@
                   cardBorderClass = "card-loss";
                   losses++;
                   maxPts -= p.confidence;
-                  pickStatusShort = `<span style="color:var(--accent-red)">Missed ✗</span>`;
                   positionLineHtml = `<div class="pos-bad">✗ Missed (-${Math.abs(currentMargin).toFixed(1)} pts)</div><div>Prob: 0%</div>`;
                 } else {
                   statusText = "PUSH";
                   statusBg = "bg-upcoming";
                   cardBorderClass = "card-upcoming";
                   ties++;
-                  pickStatusShort = `Pushed`;
                   positionLineHtml = `<div class="pos-neutral">Pushed</div><div>Prob: 0%</div>`;
                 }
               } else {
@@ -428,11 +423,11 @@
                 totalProjectedPts += p.confidence * (coverProb / 100);
 
                 if (currentMargin > 0) {
+                  activeCoveringPts += p.confidence;
                   statusText = `<span class="live-dot"></span> COVERING`;
                   statusBg = "bg-covering";
                   cardBorderClass = "card-covering";
                   headerBarClass = "live-covering";
-                  pickStatusShort = `<span style="color:var(--accent-green)">🟢 Live (+${currentMargin.toFixed(1)})</span>`;
                   positionLineHtml = `<div class="pos-good">Covering by +${currentMargin.toFixed(1)} pts</div><div>Prob: ${coverProb}%</div>`;
                 } else if (currentMargin < 0) {
                   statusText = `<span class="live-dot-red"></span> TRAILING`;
@@ -440,13 +435,11 @@
                   cardBorderClass = "card-trailing";
                   headerBarClass = "live-trailing";
                   headerText = `🔴 LIVE — ${clockText}`;
-                  pickStatusShort = `<span style="color:var(--accent-red)">🔴 Live (-${Math.abs(currentMargin).toFixed(1)})</span>`;
                   positionLineHtml = `<div class="pos-bad">Trailing by ${Math.abs(currentMargin).toFixed(1)} pts</div><div>Prob: ${coverProb}%</div>`;
                 } else {
                   statusText = `<span class="live-dot"></span> TIED SPREAD`;
                   statusBg = "bg-upcoming";
                   cardBorderClass = "card-upcoming";
-                  pickStatusShort = `🟢 Live (Tied)`;
                   positionLineHtml = `<div class="pos-neutral">Even on spread</div><div>Prob: 50.0%</div>`;
                 }
               }
@@ -458,16 +451,11 @@
               const timeStr = dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
               const dayStr = dateObj.toLocaleDateString([], { weekday: 'short' });
               headerText = `UPCOMING — ${dayStr} ${timeStr}`;
-              pickStatusShort = `Scheduled (${dayStr})`;
               scoreLineHtml = `<div>Kickoff: ${dayStr} ${timeStr}</div><div>Scheduled</div>`;
             }
           } else {
             upcomingCount++;
             totalProjectedPts += p.confidence * 0.50;
-          }
-
-          if (p.confidence === 10) {
-            topPickSummary = `${p.pick} (${p.spread > 0 ? '+' : ''}${p.spread}) — ${pickStatusShort}`;
           }
 
           const spreadFormatted = p.spread > 0 ? `+${p.spread}` : `${p.spread}`;
@@ -513,7 +501,7 @@
         document.getElementById('stat-max').innerText = `${maxPts} / 55`;
 
         document.getElementById('stat-live-pts').innerText = `${activeLivePts} Pts Active`;
-        document.getElementById('stat-top-pick').innerHTML = topPickSummary;
+        document.getElementById('stat-covering-pts').innerHTML = `<span style="color:var(--accent-green)">${activeCoveringPts} Pts Covering</span>`;
 
       } catch (err) {
         console.error("Dashboard error:", err);
