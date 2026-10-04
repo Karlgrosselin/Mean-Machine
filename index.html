@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Meat Sheet — Mean Machine Dashboard</title>
+  <style>
+    :root {
+      --bg-color: #0f172a;
+      --card-bg: #1e293b;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --accent-green: #22c55e;
+      --accent-red: #ef4444;
+      --accent-yellow: #eab308;
+      --border-color: #334155;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background-color: var(--bg-color);
+      color: var(--text-main);
+      margin: 0;
+      padding: 16px;
+      display: flex;
+      justify-content: center;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 800px;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 20px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .league-title {
+      font-size: 0.9rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--accent-yellow);
+      margin-bottom: 4px;
+    }
+
+    h1 {
+      margin: 0 0 12px 0;
+      font-size: 1.8rem;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-top: 16px;
+    }
+
+    .stat-card {
+      background-color: var(--card-bg);
+      padding: 12px;
+      border-radius: 8px;
+      border: 1px solid var(--border-color);
+      text-align: center;
+    }
+
+    .stat-val {
+      font-size: 1.4rem;
+      font-weight: bold;
+    }
+
+    .stat-lbl {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    .picks-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .pick-card {
+      background-color: var(--card-bg);
+      border-radius: 10px;
+      border: 1px solid var(--border-color);
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .card-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .matchup {
+      font-weight: 600;
+      font-size: 1rem;
+    }
+
+    .conf-tag {
+      background-color: #334155;
+      padding: 4px 8px;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      font-weight: bold;
+    }
+
+    .card-mid {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #0f172a66;
+      padding: 8px 12px;
+      border-radius: 6px;
+    }
+
+    .pick-details {
+      font-size: 0.95rem;
+    }
+
+    .highlight-pick {
+      color: #38bdf8;
+      font-weight: bold;
+    }
+
+    .status-badge {
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      font-weight: bold;
+      text-transform: uppercase;
+    }
+
+    .bg-win { background-color: rgba(34, 197, 94, 0.2); color: var(--accent-green); }
+    .bg-loss { background-color: rgba(239, 68, 68, 0.2); color: var(--accent-red); }
+    .bg-pending { background-color: rgba(234, 179, 8, 0.2); color: var(--accent-yellow); }
+
+    .card-bot {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    .win-prob {
+      font-weight: bold;
+      color: var(--text-main);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <header>
+      <div class="league-title">Meat Sheet League</div>
+      <h1>Team: Mean Machine</h1>
+      
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-val" id="stat-locked" style="color: var(--accent-green);">0</div>
+          <div class="stat-lbl">Points Locked</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-val" id="stat-live" style="color: var(--accent-yellow);">0</div>
+          <div class="stat-lbl">Points In Play</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-val" id="stat-max">55</div>
+          <div class="stat-lbl">Max Possible</div>
+        </div>
+      </div>
+    </header>
+
+    <div class="picks-list" id="picks-container">
+      <div style="text-align: center; color: var(--text-muted); padding: 20px;">Loading picks and live scores...</div>
+    </div>
+  </div>
+
+  <script>
+    async function loadDashboard() {
+      try {
+        const picksRes = await fetch('picks.json');
+        const picks = await picksRes.json();
+
+        const [cfbRes, nflRes] = await Promise.all([
+          fetch('https://site.api.espn.com/apis/site/v2/sports/football/college-football/scoreboard').catch(() => null),
+          fetch('https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard').catch(() => null)
+        ]);
+
+        const cfbData = cfbRes ? await cfbRes.json() : {};
+        const nflData = nflRes ? await nflRes.json() : {};
+        const events = [...(cfbData.events || []), ...(nflData.events || [])];
+
+        let lockedPts = 0;
+        let livePts = 0;
+        let maxPts = 55;
+
+        const container = document.getElementById('picks-container');
+        container.innerHTML = '';
+
+        picks.forEach(p => {
+          const game = events.find(e => {
+            const name = e.name.toLowerCase();
+            return name.includes(p.homeTeam.toLowerCase()) || name.includes(p.awayTeam.toLowerCase());
+          });
+
+          let statusText = "Upcoming";
+          let statusBg = "bg-pending";
+          let liveScoreStr = "Game Scheduled";
+          let winProbStr = "~50%";
+
+          if (game) {
+            const comp = game.competitions[0];
+            const home = comp.competitors.find(c => c.homeAway === 'home');
+            const away = comp.competitors.find(c => c.homeAway === 'away');
+
+            const hScore = parseInt(home.score || 0);
+            const aScore = parseInt(away.score || 0);
+            const state = comp.status.type.state;
+            const isFinished = comp.status.type.completed;
+
+            liveScoreStr = `${away.team.abbreviation || p.awayTeam} ${aScore} - ${home.team.abbreviation || p.homeTeam} ${hScore} (${comp.status.type.shortDetail})`;
+
+            const isPickedHome = p.pick.toLowerCase() === p.homeTeam.toLowerCase();
+            const pickedScore = isPickedHome ? hScore : aScore;
+            const oppScore = isPickedHome ? aScore : hScore;
+            const margin = (pickedScore - oppScore) + p.spread;
+
+            if (state === 'in' || isFinished) {
+              if (margin > 0) {
+                if (isFinished) {
+                  statusText = "WIN";
+                  statusBg = "bg-win";
+                  lockedPts += p.confidence;
+                  winProbStr = "100%";
+                } else {
+                  statusText = "COVERING";
+                  statusBg = "bg-pending";
+                  livePts += p.confidence;
+                  winProbStr = "~75%";
+                }
+              } else {
+                if (isFinished) {
+                  statusText = "LOSS";
+                  statusBg = "bg-loss";
+                  maxPts -= p.confidence;
+                  winProbStr = "0%";
+                } else {
+                  statusText = "TRAILING";
+                  statusBg = "bg-loss";
+                  winProbStr = "~25%";
+                }
+              }
+            }
+          }
+
+          container.innerHTML += `
+            <div class="pick-card">
+              <div class="card-top">
+                <div class="matchup">${p.awayTeam} @ ${p.homeTeam}</div>
+                <div class="conf-tag">${p.confidence} Pts</div>
+              </div>
+              <div class="card-mid">
+                <div class="pick-details">
+                  Pick: <span class="highlight-pick">${p.pick}</span> (${p.spread > 0 ? '+' : ''}${p.spread})
+                </div>
+                <div class="status-badge ${statusBg}">${statusText}</div>
+              </div>
+              <div class="card-bot">
+                <div>${liveScoreStr}</div>
+                <div class="win-prob">Win Prob: ${winProbStr}</div>
+              </div>
+            </div>
+          `;
+        });
+
+        document.getElementById('stat-locked').innerText = lockedPts;
+        document.getElementById('stat-live').innerText = livePts;
+        document.getElementById('stat-max').innerText = maxPts;
+
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    loadDashboard();
+    setInterval(loadDashboard, 30000);
+  </script>
+</body>
+</html>
