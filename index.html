@@ -6,15 +6,16 @@
   <title>Meat Sheet — Mean Machine Dashboard</title>
   <style>
     :root {
-      --bg-color: #0f172a;
-      --card-bg: #1e293b;
+      --bg-color: #090d16;
+      --card-bg: #131c2e;
+      --card-bg-elevated: #1a263d;
       --text-main: #f8fafc;
       --text-muted: #94a3b8;
       --accent-green: #22c55e;
       --accent-red: #ef4444;
       --accent-yellow: #eab308;
       --accent-blue: #38bdf8;
-      --border-color: #334155;
+      --border-color: #27354f;
     }
 
     * {
@@ -101,13 +102,73 @@
     .picks-list {
       display: flex;
       flex-direction: column;
-      gap: 14px;
+      gap: 16px;
     }
 
+    /* CARD STYLES & HIGHLIGHT OUTLINES */
     .pick-card {
       background-color: var(--card-bg);
-      border-radius: 10px;
-      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      border: 2px solid var(--border-color);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      transition: all 0.3s ease;
+    }
+
+    .pick-card.card-win {
+      border-color: var(--accent-green);
+      background: linear-gradient(180deg, rgba(34, 197, 94, 0.08) 0%, var(--card-bg) 100%);
+    }
+
+    .pick-card.card-covering {
+      border-color: var(--accent-green);
+      box-shadow: 0 0 16px rgba(34, 197, 94, 0.3);
+      background: linear-gradient(180deg, rgba(34, 197, 94, 0.12) 0%, var(--card-bg) 100%);
+    }
+
+    .pick-card.card-loss {
+      border-color: var(--accent-red);
+      background: linear-gradient(180deg, rgba(239, 68, 68, 0.08) 0%, var(--card-bg) 100%);
+    }
+
+    .pick-card.card-trailing {
+      border-color: var(--accent-red);
+      box-shadow: 0 0 16px rgba(239, 68, 68, 0.3);
+      background: linear-gradient(180deg, rgba(239, 68, 68, 0.12) 0%, var(--card-bg) 100%);
+    }
+
+    .pick-card.card-upcoming {
+      border-color: var(--border-color);
+    }
+
+    /* CARD HEADER BAR */
+    .card-header-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 14px;
+      font-size: 0.78rem;
+      font-weight: 800;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      background-color: rgba(15, 23, 42, 0.8);
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .card-header-bar.live-covering {
+      background-color: rgba(34, 197, 94, 0.2);
+      color: var(--accent-green);
+      border-bottom: 1px solid rgba(34, 197, 94, 0.4);
+    }
+
+    .card-header-bar.live-trailing {
+      background-color: rgba(239, 68, 68, 0.2);
+      color: var(--accent-red);
+      border-bottom: 1px solid rgba(239, 68, 68, 0.4);
+    }
+
+    .card-body {
       padding: 14px;
       display: flex;
       flex-direction: column;
@@ -122,12 +183,12 @@
 
     .matchup {
       font-weight: 700;
-      font-size: 0.95rem;
+      font-size: 1.05rem;
       color: var(--text-main);
     }
 
     .conf-tag {
-      background-color: #334155;
+      background-color: #27354f;
       color: var(--accent-yellow);
       padding: 4px 10px;
       border-radius: 6px;
@@ -139,14 +200,13 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      background: rgba(15, 23, 42, 0.6);
+      background: var(--card-bg-elevated);
       padding: 10px 12px;
-      border-radius: 6px;
-      border: 1px solid rgba(255, 255, 255, 0.05);
+      border-radius: 8px;
     }
 
     .pick-details {
-      font-size: 0.9rem;
+      font-size: 0.95rem;
     }
 
     .highlight-pick {
@@ -155,25 +215,64 @@
     }
 
     .status-badge {
-      padding: 4px 10px;
+      padding: 5px 12px;
       border-radius: 6px;
-      font-size: 0.75rem;
+      font-size: 0.78rem;
       font-weight: 800;
       text-transform: uppercase;
       letter-spacing: 0.05em;
+      display: flex;
+      align-items: center;
+      gap: 6px;
     }
 
-    .bg-win { background-color: rgba(34, 197, 94, 0.2); color: var(--accent-green); border: 1px solid rgba(34, 197, 94, 0.4); }
-    .bg-loss { background-color: rgba(239, 68, 68, 0.2); color: var(--accent-red); border: 1px solid rgba(239, 68, 68, 0.4); }
-    .bg-covering { background-color: rgba(34, 197, 94, 0.15); color: var(--accent-green); border: 1px solid rgba(34, 197, 94, 0.3); }
-    .bg-trailing { background-color: rgba(239, 68, 68, 0.15); color: var(--accent-red); border: 1px solid rgba(239, 68, 68, 0.3); }
-    .bg-upcoming { background-color: rgba(148, 163, 184, 0.15); color: var(--text-muted); border: 1px solid rgba(148, 163, 184, 0.3); }
+    .bg-win, .bg-covering {
+      background-color: rgba(34, 197, 94, 0.25);
+      color: var(--accent-green);
+      border: 1px solid var(--accent-green);
+    }
+
+    .bg-loss, .bg-trailing {
+      background-color: rgba(239, 68, 68, 0.25);
+      color: var(--accent-red);
+      border: 1px solid var(--accent-red);
+    }
+
+    .bg-upcoming {
+      background-color: rgba(148, 163, 184, 0.15);
+      color: var(--text-muted);
+      border: 1px solid rgba(148, 163, 184, 0.3);
+    }
+
+    .live-dot {
+      width: 8px;
+      height: 8px;
+      background-color: var(--accent-green);
+      border-radius: 50%;
+      display: inline-block;
+      animation: pulse 1.5s infinite;
+    }
+
+    .live-dot-red {
+      width: 8px;
+      height: 8px;
+      background-color: var(--accent-red);
+      border-radius: 50%;
+      display: inline-block;
+      animation: pulse 1.5s infinite;
+    }
+
+    @keyframes pulse {
+      0% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.3; transform: scale(1.3); }
+      100% { opacity: 1; transform: scale(1); }
+    }
 
     .card-bot {
       display: flex;
       flex-direction: column;
       gap: 4px;
-      font-size: 0.82rem;
+      font-size: 0.85rem;
       color: var(--text-muted);
     }
 
@@ -185,7 +284,8 @@
     }
 
     .position-line {
-      font-size: 0.8rem;
+      font-size: 0.82rem;
+      font-weight: 600;
     }
 
     .pos-good { color: var(--accent-green); }
@@ -262,6 +362,9 @@
 
           let statusText = "UPCOMING";
           let statusBg = "bg-upcoming";
+          let cardBorderClass = "card-upcoming";
+          let headerBarClass = "";
+          let headerText = "SCHEDULED";
           let scoreLineHtml = `<div>Status: Scheduled</div><div>--</div>`;
           let positionLineHtml = `<div class="pos-neutral">Need ${p.pick} ${p.spread > 0 ? '+' : ''}${p.spread}</div>`;
 
@@ -288,38 +391,49 @@
               `;
 
               if (isFinished) {
+                headerText = "FINAL";
                 if (currentMargin > 0) {
                   statusText = "WIN";
                   statusBg = "bg-win";
+                  cardBorderClass = "card-win";
                   wins++;
                   lockedPts += p.confidence;
-                  positionLineHtml = `<div class="pos-good">Covered by +${currentMargin.toFixed(1)} pts</div>`;
+                  positionLineHtml = `<div class="pos-good">✓ Covered by +${currentMargin.toFixed(1)} pts</div>`;
                 } else if (currentMargin < 0) {
                   statusText = "LOSS";
                   statusBg = "bg-loss";
+                  cardBorderClass = "card-loss";
                   losses++;
                   maxPts -= p.confidence;
-                  positionLineHtml = `<div class="pos-bad">Missed cover by ${Math.abs(currentMargin).toFixed(1)} pts</div>`;
+                  positionLineHtml = `<div class="pos-bad">✗ Missed cover by ${Math.abs(currentMargin).toFixed(1)} pts</div>`;
                 } else {
                   statusText = "PUSH";
                   statusBg = "bg-upcoming";
+                  cardBorderClass = "card-upcoming";
                   ties++;
                   positionLineHtml = `<div class="pos-neutral">Pushed (Exact Spread)</div>`;
                 }
               } else {
                 inProgressCount++;
+                headerText = `🟢 LIVE — ${clockText}`;
                 if (currentMargin > 0) {
-                  statusText = "COVERING";
+                  statusText = `<span class="live-dot"></span> COVERING`;
                   statusBg = "bg-covering";
+                  cardBorderClass = "card-covering";
+                  headerBarClass = "live-covering";
                   livePts += p.confidence;
                   positionLineHtml = `<div class="pos-good">Currently covering by +${currentMargin.toFixed(1)} pts</div>`;
                 } else if (currentMargin < 0) {
-                  statusText = "TRAILING";
+                  statusText = `<span class="live-dot-red"></span> TRAILING`;
                   statusBg = "bg-trailing";
+                  cardBorderClass = "card-trailing";
+                  headerBarClass = "live-trailing";
+                  headerText = `🔴 LIVE — ${clockText}`;
                   positionLineHtml = `<div class="pos-bad">Currently trailing by ${Math.abs(currentMargin).toFixed(1)} pts</div>`;
                 } else {
-                  statusText = "TIED SPREAD";
+                  statusText = `<span class="live-dot"></span> TIED SPREAD`;
                   statusBg = "bg-upcoming";
+                  cardBorderClass = "card-upcoming";
                   positionLineHtml = `<div class="pos-neutral">Currently right on spread (Push)</div>`;
                 }
               }
@@ -327,6 +441,7 @@
               const dateObj = new Date(game.date);
               const timeStr = dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
               const dayStr = dateObj.toLocaleDateString([], { weekday: 'short' });
+              headerText = `UPCOMING — ${dayStr} ${timeStr}`;
               scoreLineHtml = `<div>Kickoff: ${dayStr} ${timeStr}</div><div>Scheduled</div>`;
             }
           }
@@ -334,20 +449,25 @@
           const spreadFormatted = p.spread > 0 ? `+${p.spread}` : `${p.spread}`;
 
           container.innerHTML += `
-            <div class="pick-card">
-              <div class="card-top">
-                <div class="matchup">${p.awayTeam} @ ${p.homeTeam}</div>
-                <div class="conf-tag">${p.confidence} Pts</div>
+            <div class="pick-card ${cardBorderClass}">
+              <div class="card-header-bar ${headerBarClass}">
+                <div>${headerText}</div>
+                <div>${p.confidence} CONF PTS</div>
               </div>
-              <div class="card-mid">
-                <div class="pick-details">
-                  Our Pick: <span class="highlight-pick">${p.pick}</span> (${spreadFormatted})
+              <div class="card-body">
+                <div class="card-top">
+                  <div class="matchup">${p.awayTeam} @ ${p.homeTeam}</div>
                 </div>
-                <div class="status-badge ${statusBg}">${statusText}</div>
-              </div>
-              <div class="card-bot">
-                <div class="score-line">${scoreLineHtml}</div>
-                <div class="position-line">${positionLineHtml}</div>
+                <div class="card-mid">
+                  <div class="pick-details">
+                    Our Pick: <span class="highlight-pick">${p.pick}</span> (${spreadFormatted})
+                  </div>
+                  <div class="status-badge ${statusBg}">${statusText}</div>
+                </div>
+                <div class="card-bot">
+                  <div class="score-line">${scoreLineHtml}</div>
+                  <div class="position-line">${positionLineHtml}</div>
+                </div>
               </div>
             </div>
           `;
