@@ -374,12 +374,13 @@
             return matchesHome && matchesAway;
           });
 
+          let matchupDisplay = `${p.awayTeam} @ ${p.homeTeam}`;
           let statusText = "UPCOMING";
           let statusBg = "bg-upcoming";
           let cardBorderClass = "card-upcoming";
           let headerBarClass = "";
           let headerText = "SCHEDULED";
-          let scoreLineHtml = `<div>Status: Scheduled</div><div>--</div>`;
+          let scoreLineHtml = `<div>Kickoff: Scheduled</div><div>--</div>`;
           let positionLineHtml = `<div class="pos-neutral">Need ${p.pick} ${p.spread > 0 ? '+' : ''}${p.spread}</div>`;
 
           if (game) {
@@ -399,8 +400,12 @@
 
             if (state === 'in' || isFinished) {
               const clockText = comp.status.type.shortDetail || (isFinished ? "FINAL" : "LIVE");
+              
+              // Top line displays scores with team names during ongoing or finished games
+              matchupDisplay = `${p.awayTeam} ${aScore} @ ${p.homeTeam} ${hScore}`;
+              
               scoreLineHtml = `
-                <div>${away.team.abbreviation || p.awayTeam} ${aScore} - ${home.team.abbreviation || p.homeTeam} ${hScore}</div>
+                <div>Game Clock</div>
                 <div>${clockText}</div>
               `;
 
@@ -470,7 +475,7 @@
               </div>
               <div class="card-body">
                 <div class="card-top">
-                  <div class="matchup">${p.awayTeam} @ ${p.homeTeam}</div>
+                  <div class="matchup">${matchupDisplay}</div>
                 </div>
                 <div class="card-mid">
                   <div class="pick-details">
