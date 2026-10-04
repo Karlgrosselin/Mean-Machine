@@ -1,0 +1,82 @@
+[
+  {
+    "sport": "college-football",
+    "homeTeam": "Mississippi State",
+    "awayTeam": "Alabama",
+    "pick": "Alabama",
+    "spread": -5.5,
+    "confidence": 4
+  },
+  {
+    "sport": "college-football",
+    "homeTeam": "Missouri",
+    "awayTeam": "Florida",
+    "pick": "Florida",
+    "spread": -4.5,
+    "confidence": 9
+  },
+  {
+    "sport": "college-football",
+    "homeTeam": "Tennessee",
+    "awayTeam": "Auburn",
+    "pick": "Auburn",
+    "spread": 7.5,
+    "confidence": 1
+  },
+  {
+    "sport": "college-football",
+    "homeTeam": "Iowa",
+    "awayTeam": "Ohio State",
+    "pick": "Ohio State",
+    "spread": -13.5,
+    "confidence": 10
+  },
+  {
+    "sport": "college-football",
+    "homeTeam": "South Carolina",
+    "awayTeam": "Kentucky",
+    "pick": "South Carolina",
+    "spread": -2.5,
+    "confidence": 2
+  },
+  {
+    "sport": "college-football",
+    "homeTeam": "Colorado",
+    "awayTeam": "Texas Tech",
+    "pick": "Colorado",
+    "spread": 13.5,
+    "confidence": 7
+  },
+  {
+    "sport": "college-football",
+    "homeTeam": "Arizona State",
+    "awayTeam": "Baylor",
+    "pick": "Baylor",
+    "spread": 4.5,
+    "confidence": 6
+  },
+  {
+    "sport": "nfl",
+    "homeTeam": "Raiders",
+    "awayTeam": "Chiefs",
+    "pick": "Chiefs",
+    "spread": -4.5,
+    "confidence": 3
+  },
+  {
+    "sport": "nfl",
+    "homeTeam": "Panthers",
+    "awayTeam": "Lions",
+    "pick": "Lions",
+    "spread": -3.5,
+    "confidence": 8
+  },
+  {
+    "sport": "nfl",
+    "homeTeam": "Saints",
+    "awayTeam": "Falcons",
+    "pick": "Saints",
+    "spread": -2.5,
+    "confidence": 5
+  }
+]
