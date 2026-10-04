@@ -105,7 +105,6 @@
       gap: 16px;
     }
 
-    /* CARD STYLES & HIGHLIGHT OUTLINES */
     .pick-card {
       background-color: var(--card-bg);
       border-radius: 12px;
@@ -142,7 +141,6 @@
       border-color: var(--border-color);
     }
 
-    /* CARD HEADER BAR */
     .card-header-bar {
       display: flex;
       justify-content: space-between;
@@ -185,15 +183,6 @@
       font-weight: 700;
       font-size: 1.05rem;
       color: var(--text-main);
-    }
-
-    .conf-tag {
-      background-color: #27354f;
-      color: var(--accent-yellow);
-      padding: 4px 10px;
-      border-radius: 6px;
-      font-size: 0.8rem;
-      font-weight: 800;
     }
 
     .card-mid {
@@ -328,6 +317,20 @@
   </div>
 
   <script>
+    function cleanName(str) {
+      return (str || '')
+        .toLowerCase()
+        .replace(/[^a-z0-9]/g, '')
+        .replace(/st$/, 'state');
+    }
+
+    function isTeamMatch(teamA, teamB) {
+      const a = cleanName(teamA);
+      const b = cleanName(teamB);
+      if (!a || !b) return false;
+      return a === b || a.includes(b) || b.includes(a);
+    }
+
     async function loadDashboard() {
       try {
         const picksRes = await fetch('picks.json');
@@ -356,8 +359,19 @@
 
         picks.forEach(p => {
           const game = events.find(e => {
-            const name = e.name.toLowerCase();
-            return name.includes(p.homeTeam.toLowerCase()) || name.includes(p.awayTeam.toLowerCase());
+            const comp = e.competitions[0];
+            const home = comp.competitors.find(c => c.homeAway === 'home');
+            const away = comp.competitors.find(c => c.homeAway === 'away');
+
+            const hName = home.team.displayName || home.team.name || '';
+            const aName = away.team.displayName || away.team.name || '';
+            const hShort = home.team.shortDisplayName || home.team.abbreviation || '';
+            const aShort = away.team.shortDisplayName || away.team.abbreviation || '';
+
+            const matchesHome = isTeamMatch(p.homeTeam, hName) || isTeamMatch(p.homeTeam, hShort);
+            const matchesAway = isTeamMatch(p.awayTeam, aName) || isTeamMatch(p.awayTeam, aShort);
+
+            return matchesHome && matchesAway;
           });
 
           let statusText = "UPCOMING";
@@ -378,7 +392,7 @@
             const state = comp.status.type.state;
             const isFinished = comp.status.type.completed;
 
-            const isPickedHome = p.pick.toLowerCase() === p.homeTeam.toLowerCase();
+            const isPickedHome = isTeamMatch(p.pick, home.team.displayName) || isTeamMatch(p.pick, home.team.name) || isTeamMatch(p.pick, p.homeTeam);
             const pickedScore = isPickedHome ? hScore : aScore;
             const oppScore = isPickedHome ? aScore : hScore;
             const currentMargin = (pickedScore - oppScore) + p.spread;
